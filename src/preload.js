@@ -1,55 +1,41 @@
-/*
- * @Date: 2024-01-21 14:56:46
- * @LastEditors: Night-stars-1 nujj1042633805@gmail.com
- * @LastEditTime: 2024-01-28 23:46:20
- */
-// Electron 主进程 与 渲染进程 交互的桥梁
-const { contextBridge, ipcRenderer } = require("electron");
-
-// 在window对象下导出只读对象
-contextBridge.exposeInMainWorld("pluginStore", {
-    ipcRenderer_LL: ipcRenderer,
-    ipcRenderer_LL_on: (channel, callback) => {
-        ipcRenderer.on(channel, callback)
-    },
-    // 安装
-    install: (url, slug) =>
-        ipcRenderer.invoke("LiteLoader.pluginStore.install", url, slug),
-    // 下载文件
-    downloadFile: (url, file_name, save_folder) =>
-        ipcRenderer.invoke("LiteLoader.pluginStore.downloadFile", url, file_name, save_folder),
-    // 卸载
-    uninstall: (slug) =>
-        ipcRenderer.invoke(
-            "LiteLoader.pluginStore.uninstall",
-            slug
-        ),
-    // 更新
-    update: (url, slug) =>
-        ipcRenderer.invoke("LiteLoader.pluginStore.update", url, slug),
-    // 重开
-    restart: () => ipcRenderer.invoke("LiteLoader.pluginStore.restart"),
-    // 外部打开网址
-    openWeb: (url) =>
-        ipcRenderer.send("LiteLoader.pluginStore.openWeb", url),
-    createWin: (message) =>
-        ipcRenderer.send("LiteLoader.pluginStore.createWin", message),
-    createBrowserWindow: (slug) => {
-        const LiteLoader = ipcRenderer.sendSync("LiteLoader.LiteLoader.LiteLoader")
-        console.log(JSON.stringify(LiteLoader))
-        const store = LiteLoader.plugins[slug].manifest.store;
-        store.slug = slug;
-        ipcRenderer.send("LiteLoader.pluginStore.createBrowserWindow", JSON.stringify(store))
-    },
-    isSnippetInstall: (slug, file_name) => 
-        ipcRenderer.invoke(`LiteLoader.${slug}.isSnippetInstall`, file_name),
-    isSnippetRestart: (slug, file_name) => 
-        ipcRenderer.invoke(`LiteLoader.${slug}.isSnippetRestart`, file_name),
-    log: (level, ...serializedArgs) =>
-            ipcRenderer.send("LiteLoader.pluginStore.log", level, ...serializedArgs),
-    LiteLoader: () => {
-        return {
-            ...ipcRenderer.sendSync("LiteLoader.LiteLoader.LiteLoader")
-        }
-    }
+// src/preload/index.ts
+var import_electron = require("electron");
+import_electron.contextBridge.exposeInMainWorld("pluginStore", {
+  ipcRenderer_LL: import_electron.ipcRenderer,
+  ipcRenderer_LL_on: (channel, callback) => {
+    import_electron.ipcRenderer.on(channel, callback);
+  },
+  // 安装
+  install: (url, slug) => import_electron.ipcRenderer.invoke("LiteLoader.pluginStore.install", url, slug),
+  // 下载文件
+  downloadFile: (url, fileName, saveFolder) => import_electron.ipcRenderer.invoke("LiteLoader.pluginStore.downloadFile", url, fileName, saveFolder),
+  // 卸载
+  uninstall: (slug) => import_electron.ipcRenderer.invoke(
+    "LiteLoader.pluginStore.uninstall",
+    slug
+  ),
+  // 更新
+  update: (url, slug) => import_electron.ipcRenderer.invoke("LiteLoader.pluginStore.update", url, slug),
+  // 重开
+  restart: () => import_electron.ipcRenderer.invoke("LiteLoader.pluginStore.restart"),
+  // 外部打开网址
+  openWeb: (url) => {
+    import_electron.ipcRenderer.send("LiteLoader.pluginStore.openWeb", url);
+  },
+  createWin: (message) => import_electron.ipcRenderer.send("LiteLoader.pluginStore.createWin", message),
+  createBrowserWindow: (slug) => {
+    const LiteLoader = import_electron.ipcRenderer.sendSync("LiteLoader.LiteLoader.LiteLoader");
+    const store = LiteLoader.plugins[slug].manifest.store;
+    store.slug = slug;
+    import_electron.ipcRenderer.send("LiteLoader.pluginStore.createBrowserWindow", JSON.stringify(store));
+  },
+  isSnippetInstall: (slug, fileName) => import_electron.ipcRenderer.invoke(`LiteLoader.${slug}.isSnippetInstall`, fileName),
+  isSnippetRestart: (slug, fileName) => import_electron.ipcRenderer.invoke(`LiteLoader.${slug}.isSnippetRestart`, fileName),
+  log: (level, ...serializedArgs) => import_electron.ipcRenderer.send("LiteLoader.pluginStore.log", level, ...serializedArgs),
+  LiteLoader: () => {
+    return {
+      ...import_electron.ipcRenderer.sendSync("LiteLoader.LiteLoader.LiteLoader"),
+      storeData: import_electron.ipcRenderer.sendSync("LiteLoader.pluginStore.getStoreData")
+    };
+  }
 });
